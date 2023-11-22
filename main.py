@@ -1,7 +1,9 @@
 from fastapi import FastAPI,File, UploadFile
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
 from PIL import Image
+from fastapi.staticfiles import StaticFiles
 import io 
 from collections import Counter
 
@@ -11,9 +13,16 @@ class serverApi:
         self.host = host
         self.model = YOLO("./model/yolov8m.pt") 
         self.api = FastAPI(title="Self Checkout Api")
+        self.api.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
         self.api.add_api_route("/status",self.serve_status,methods=['GET'])
         self.api.add_api_route("/inference",self.inference,methods=["POST"])
-
+        self.api.mount("/", StaticFiles(directory="ui", html=True), name="ui")
     async def serve_status(self):
         return {
             "status":"alive"
